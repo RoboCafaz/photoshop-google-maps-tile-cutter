@@ -122,13 +122,21 @@ function cutTiles(options, tickCallback) {
 	var maxTileDim = Math.ceil(Math.max(curDoc.width.value, curDoc.height.value) / options.tileSize);
 
 	// Define max and min zoom level + define the total number of tiles that will be generated
-	var minZoomLevel = 0,
-		maxZoomLevel = 0,
+	var minZoomLevel = options.minZoomLevel,
+		maxZoomLevel = options.minZoomLevel,
 		numTilesTotalForAllLevels = 1;
+		
+	if(Math.pow(2, minZoomLevel) > maxTileDim) {
+		alert("Your minimum zoom level (" + minZoomLevel + ") is too big for the image's maximum possible zoom level (" + maxZoomLevel + ")!", "Bad Zoom Level!", true);
+		app.beep();
+		return;
+	}
+	
 	do {
 		maxZoomLevel++;
 		numTilesTotalForAllLevels += Math.pow(2, 2 * maxZoomLevel);
-	} while (Math.pow(2, maxZoomLevel) < maxTileDim);
+	} while (maxZoomLevel < options.maxZoomLevel && Math.pow(2, maxZoomLevel) < maxTileDim);
+	
 
 	// Store initial state
 	var InitialSnapshotID = getLastSnapshotID(curDoc);
@@ -487,6 +495,12 @@ var windowMain = new Window(
 	'			lblBg: StaticText { text: "Background Color:" },' +
 	'			txtBgColor: EditText { text:"' + app.backgroundColor.rgb.hexValue + '", characters: 6, enabled: true }' +
 	'		}' +
+	'		grpZoomLevel: Group { orientation: "row", alignment: "left",' +
+	'			lblZoomMin: StaticText { text: "Minimum Zoom:" },' +
+	'			txtZoomMin: EditText { text: "0", characters: 2, enabled: true },' +
+	'			lblZoomMax: StaticText { text: "Maximum Zoom:" },' +
+	'			txtZoomMax: EditText { text: "24", characters: 2, enabled: true },' +
+	'		}' +
 //	'		grpExportBlanks: Group { orientation: "row", alignment: "left",' +
 //	'			cbDontExport: Checkbox { text: "Don\'t export transparent tiles", value: true},' +
 //	'		}' +
@@ -534,7 +548,9 @@ windowMain.grpButtons.btnMakeTiles.onClick = function() {
 		saveJPEG: windowMain.pnlExportOptions.grpFiletype.optJPEG.value,
 		savePNG: windowMain.pnlExportOptions.grpFiletype.optPNG.value,
 		saveGIF: windowMain.pnlExportOptions.grpFiletype.optGIF.value,
-		bgColor: windowMain.pnlExportOptions.grpSizeColor.txtBgColor.text
+		bgColor: windowMain.pnlExportOptions.grpSizeColor.txtBgColor.text,
+		minZoomLevel: parseInt(windowMain.pnlExportOptions.grpZoomLevel.txtZoomMin.text, 10),
+		maxZoomLevel: parseInt(windowMain.pnlExportOptions.grpZoomLevel.txtZoomMax.text, 10)
 	};
 
 	// Hide main window and show the loading window
