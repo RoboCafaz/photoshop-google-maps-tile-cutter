@@ -124,6 +124,7 @@ function cutTiles(options, tickCallback) {
 	// Define max and min zoom level + define the total number of tiles that will be generated
 	var minZoomLevel = options.minZoomLevel,
 		maxZoomLevel = options.minZoomLevel,
+		maxPossibleZoomLevel = options.minZoomLevel,
 		numTilesTotalForAllLevels = 1;
 		
 	if(Math.pow(2, minZoomLevel) > maxTileDim) {
@@ -133,10 +134,11 @@ function cutTiles(options, tickCallback) {
 	}
 	
 	do {
-		maxZoomLevel++;
+		maxPossibleZoomLevel++;
 		numTilesTotalForAllLevels += Math.pow(2, 2 * maxZoomLevel);
-	} while (maxZoomLevel < options.maxZoomLevel && Math.pow(2, maxZoomLevel) < maxTileDim);
+	} while (Math.pow(2, maxZoomLevel) < maxTileDim);
 	
+	maxZoomLevel = Math.min(options.maxZoomLevel, maxPossibleZoomLevel);
 
 	// Store initial state
 	var InitialSnapshotID = getLastSnapshotID(curDoc);
@@ -158,7 +160,7 @@ function cutTiles(options, tickCallback) {
 	curDoc.resizeCanvas(options.tileSize * Math.pow(2, maxZoomLevel), options.tileSize * Math.pow(2, maxZoomLevel), AnchorPosition.MIDDLECENTER);
 
 	// Store current zoom level
-	var zoomLevel = maxZoomLevel;
+	var zoomLevel = maxPossibleZoomLevel;
 
 	var curTileNum = 0;
 
@@ -177,13 +179,17 @@ function cutTiles(options, tickCallback) {
 		}
 
 		// Resize the canvas to fit the zoom level (50% per zoom level step)
-		if (zoomLevel < maxZoomLevel) {
+		if (zoomLevel < maxPossibleZoomLevel) {
 			curDoc.resizeImage(curDoc.width.value * 0.5, curDoc.height.value * 0.5);
 		}
 
 		// Take a snapshot for this zoom level and store it
 		takeSnapshot();
 		snapshots.push(getLastSnapshotID(curDoc));
+		
+		if(zoomLevel > maxZoomLevel){
+			continue;
+		}
 
 		// Calculate the number of tiles we'll need
 		var numTilesX = parseInt(curDoc.width.value, 10) / options.tileSize; // num tiles on the x axis
