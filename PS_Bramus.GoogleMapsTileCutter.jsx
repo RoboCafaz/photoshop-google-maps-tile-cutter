@@ -123,7 +123,7 @@ function cutTiles(options, tickCallback) {
 
 	// Define max and min zoom level + define the total number of tiles that will be generated
 	var minZoomLevel = options.minZoomLevel,
-		maxZoomLevel = options.minZoomLevel,
+		maxZoomLevel = options.maxZoomLevel,
 		maxPossibleZoomLevel = options.minZoomLevel,
 		numTilesTotalForAllLevels = 1;
 		
@@ -135,8 +135,10 @@ function cutTiles(options, tickCallback) {
 	
 	do {
 		maxPossibleZoomLevel++;
-		numTilesTotalForAllLevels += Math.pow(2, 2 * maxZoomLevel);
-	} while (Math.pow(2, maxZoomLevel) < maxTileDim);
+		if(maxPossibleZoomLevel <= maxZoomLevel){
+			numTilesTotalForAllLevels += Math.pow(2, 2 * maxPossibleZoomLevel);
+		}
+	} while (Math.pow(2, maxPossibleZoomLevel) < maxTileDim);
 	
 	maxZoomLevel = Math.min(options.maxZoomLevel, maxPossibleZoomLevel);
 
@@ -167,17 +169,6 @@ function cutTiles(options, tickCallback) {
 	// Do the following for each zoom level the user wants
 	while (zoomLevel >= minZoomLevel) {
 
-		// Make sure zoomLevel folder exists if exporting with useSubFolders enabled
-		if (options.useSubFolders) {
-
-			var targetFolderZ = new Folder(options.targetPath + zoomLevel + pathDivider);
-			if (!targetFolderZ.exists) targetFolderZ.create();
-
-			var targetFolderZX = new Folder(options.targetPath + zoomLevel + pathDivider + "0" + pathDivider);
-			if (!targetFolderZX.exists) targetFolderZX.create();
-
-		}
-
 		// Resize the canvas to fit the zoom level (50% per zoom level step)
 		if (zoomLevel < maxPossibleZoomLevel) {
 			curDoc.resizeImage(curDoc.width.value * 0.5, curDoc.height.value * 0.5);
@@ -190,6 +181,17 @@ function cutTiles(options, tickCallback) {
 		if(zoomLevel > maxZoomLevel){
 			zoomLevel--;
 			continue;
+		}
+
+		// Make sure zoomLevel folder exists if exporting with useSubFolders enabled
+		if (options.useSubFolders) {
+
+			var targetFolderZ = new Folder(options.targetPath + zoomLevel + pathDivider);
+			if (!targetFolderZ.exists) targetFolderZ.create();
+
+			var targetFolderZX = new Folder(options.targetPath + zoomLevel + pathDivider + "0" + pathDivider);
+			if (!targetFolderZX.exists) targetFolderZX.create();
+
 		}
 
 		// Calculate the number of tiles we'll need
