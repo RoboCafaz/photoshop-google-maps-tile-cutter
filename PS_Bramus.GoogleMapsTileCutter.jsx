@@ -188,6 +188,7 @@ function cutTiles(options, tickCallback) {
 		snapshots.push(getLastSnapshotID(curDoc));
 		
 		if(zoomLevel > maxZoomLevel){
+			zoomLevel--;
 			continue;
 		}
 
